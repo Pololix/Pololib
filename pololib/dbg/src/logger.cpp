@@ -29,6 +29,8 @@ namespace plb
 
 	void LoggerManager::init(const std::filesystem::path& path)
 	{
+		if (m_HasInit) return;
+
 		m_LogsPath = path;
 		m_OwnLogger = std::make_unique<Logger>("logger manager", path);
 		m_HasInit = true;

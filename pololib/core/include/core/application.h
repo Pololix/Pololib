@@ -15,8 +15,7 @@ namespace plb
 	class Application
 	{
 	public:
-		Application(std::unique_ptr<Window> window)
-			: m_Window(std::move(window)) {}
+		Application();
 		~Application() = default;
 
 		LayerID addLayer(std::unique_ptr<Layer> layer);
