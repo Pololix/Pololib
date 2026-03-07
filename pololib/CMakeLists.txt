@@ -1,4 +1,5 @@
-# pololib specific
+# pololib - specific
+
 # config 
 add_library(config INTERFACE)
 
@@ -17,10 +18,8 @@ target_compile_definitions(config
 add_subdirectory(deps)
 
 add_subdirectory(core)
-add_subdirectory(dbg)
-add_subdirectory(graphics)
 add_subdirectory(platform)
-
+add_subdirectory(renderer)
 
 # .lib
 add_library(pololib INTERFACE)
@@ -28,7 +27,6 @@ add_library(pololib INTERFACE)
 target_link_libraries(pololib
 	INTERFACE
 		core
-		dbg
+		renderer
 		platform
-		graphics
 )

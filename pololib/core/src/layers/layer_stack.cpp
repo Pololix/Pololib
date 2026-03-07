@@ -1,65 +1,89 @@
 #include "core/layers/layer_stack.h"
 
 #include <algorithm>
-#include "core/events/events.h"
-#include "dbg/assert.h"
-#include "dbg/logs.h"
+#include "core/events/base_event.h"
+#include "core/layers/base_layer.h"
+#include "core/debug/log_macros.h"
 
 namespace plb
 {
-	LayerID LayerStack::attachLayer(std::unique_ptr<Layer> layer, bool overlay)
+	LayerID LayerStack::attachLayer(std::unique_ptr<ILayer> layer, bool overlay)
 	{
 		layer->m_ID = m_FreeID++;
+		layer->m_Overlay = overlay;
+		layer->onAttach(*this);
 
 		if (overlay)
 		{
 			m_LayerBuffer.push_back(std::move(layer));
-			m_LayerBuffer.end()->get()->onAttach();
 		}
 		else
 		{
 			m_LayerBuffer.insert(m_LayerBuffer.begin() + m_OverlayIndex, std::move(layer));
-			m_LayerBuffer.at(m_OverlyIndex)->onAttach();
 			m_OverlayIndex++;
 		}
 
-		PLB_LOG_INFO("New layer attached");
 		return m_FreeID;
-	}
-
-	void LayerStack::detachLayer(LayerID ID)
-	{
-		size_t pos = getPos(ID);
-		if (pos == 0) return; //PLB_TODO: log error
-
-		m_LayerBuffer.at(pos)->onDetach();
-		m_LayerBuffer.erase(m_LayerBuffer.begin() + pos);
-		if (!overlay) m_OverlayIndex--;
 	}
 
 	void LayerStack::suspendLayer(LayerID ID)
 	{
-		//PLB_TODO: check it wasnt previously suspended
-		size_t pos = getPos(ID);
-		if (pos == 0) return;
+		unsigned int pos = getPos(ID);
 
-		m_LayerBuffer.at(pos).get()->m_Suspended = true;
-		m_LayerBuffer.at(pos).get()->onSuspend();
+		if (pos == 0)
+		{
+			PLB_LOG_WARN("LayerStack", "Tried to access a destroyed layer");
+			return;
+		}
+
+		if (m_LayerBuffer.at(pos)->m_Suspended)
+		{
+			PLB_LOG_WARN("LayerStack", "Tried to suspend a suspended layer");
+			return;
+		}
+
+		m_LayerBuffer.at(pos)->onSuspend(*this);
+		m_LayerBuffer.at(pos)->m_Suspended = true;
 	}
 
 	void LayerStack::includeLayer(LayerID ID)
 	{
-		//PLB_TODO: check it wasnt previously included
-		size_t pos = getPos(ID);
-		if (pos == 0) return;
+		unsigned int pos = getPos(ID);
 
-		m_LayerBuffer.at(pos).get()->m_Suspended = false;
-		m_LayerBuffer.at(pos).get()->onInclude();
+		if (pos == 0)
+		{
+			PLB_LOG_WARN("LayerStack", "Tried to access a destroyed layer");
+			return;
+		}
+
+		if (!m_LayerBuffer.at(pos)->m_Suspended)
+		{
+			PLB_LOG_WARN("LayerStack", "Tried to include an active layer");
+			return;
+		}
+
+		m_LayerBuffer.at(pos)->onInclude(*this);
+		m_LayerBuffer.at(pos)->m_Suspended = false;
 	}
 
-	void LayerStack::propagateEvent(Event& e) const
+	void LayerStack::detachLayer(LayerID ID)
 	{
-		for (auto layer = m_LayerBuffer.rbegin(); layer != m_LayerBuffer.rend();layer++)
+		unsigned int pos = getPos(ID);
+
+		if (pos == 0)
+		{
+			PLB_LOG_WARN("LayerStack", "Tried to access a destroyed layer");
+			return;
+		}
+
+		m_LayerBuffer.at(pos)->onDetach(*this);
+		m_OverlayIndex -= m_LayerBuffer.at(pos)->m_Overlay ? 0 : 1;
+		m_LayerBuffer.erase(m_LayerBuffer.begin() + pos);
+	}
+
+	void LayerStack::propagateEvent(IEvent& e) const
+	{
+		for (auto layer = m_LayerBuffer.rbegin(); layer != m_LayerBuffer.rend(); layer++)
 		{
 			(*layer)->onEvent(e);
 			if (e.m_Handled) break;
@@ -76,19 +100,26 @@ namespace plb
 
 	void LayerStack::render() const
 	{
-		for (auto& layer : m_LayerBuffer)
+		for (auto layer = m_LayerBuffer.begin(); layer != m_LayerBuffer.end(); layer++)
 		{
-			layer->onRender();
+			(*layer)->onRender();
 		}
 	}
 
 	unsigned int LayerStack::getPos(LayerID ID) const
 	{
-		auto target = std::find_if(m_LayerBuffer.begin(), m_LayerBuffer.end(), [ID](const std::unique_ptr<Layer>& layer)
+		auto target = std::find_if(m_LayerBuffer.begin(), m_LayerBuffer.end(), [ID](const std::unique_ptr<ILayer>& layer)
 		{
-			return layer->m_ID == ID;
+			return layer->m_ID = ID;
 		});
 
-		return (target == m_LayerBuffer.end()) ? 0 : static_cast<int>(std::distance(m_LayerBuffer.begin(), target));
+		if (target != m_LayerBuffer.end())
+		{
+			return std::distance(m_LayerBuffer.begin(), target);
+		}
+		else
+		{
+			return 0;
+		}
 	}
 }

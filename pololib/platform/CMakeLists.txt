@@ -1,7 +1,8 @@
 # platform submodule
+
 add_library(platform STATIC
-	src/glfw/window_glfw.cpp
- "include/platform/glfw/glfw_config.h")
+	"src/windows/wnd_window.cpp"
+   "src/window_factory.cpp")
 
 target_include_directories(platform
 	PUBLIC
@@ -9,10 +10,8 @@ target_include_directories(platform
 )
 
 target_link_libraries(platform
-	PRIVATE
+	PUBLIC
 		core
 		glfw
-		dbg
-		config
-		graphics
+		glad
 )

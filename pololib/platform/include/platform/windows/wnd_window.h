@@ -1,18 +1,19 @@
 #pragma once
+#ifdef PLB_PLATFORM_WND
 
-#include "core/window.h"
+#include "core/base_window.h"
 
 struct GLFWwindow;
 
 namespace plb
 {
-	class WindowGLFW : public Window
+	class WndWindow : public IWindow
 	{
 	public:
-		WindowGLFW();
-		~WindowGLFW() = default;
+		WndWindow();
+		~WndWindow() override;
 
-		void build(WindowSpecs specs) override;
+		void build(WinSpecs&& specs) override;
 		void makeContextCurrent() override;
 
 		void pollEvents() override;
@@ -37,3 +38,5 @@ namespace plb
 		static void keyCallback				(GLFWwindow* window, int key, int scancode, int action, int mods);
 	};
 }
+
+#endif

@@ -1,7 +1,12 @@
 # core submodule
+
 add_library(core STATIC
+	src/debug/logger.cpp
+	src/events/base_event.cpp
+	src/events/event_system.cpp
 	src/application.cpp
- "include/core/config.h"   )
+	src/base_window.cpp
+ "src/layers/layer_stack.cpp")
 
 target_include_directories(core
 	PUBLIC
@@ -9,7 +14,7 @@ target_include_directories(core
 )
 
 target_link_libraries(core
-	PRIVATE
-		config	
-		dbg
+	PUBLIC
+		renderer
+		config
 )

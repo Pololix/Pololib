@@ -2,10 +2,10 @@
 
 namespace plb
 {
-	class GraphicsContext
+	class IGraphicsContext
 	{
 	public:
-		virtual ~GraphicsContext() = 0;
+		virtual ~IGraphicsContext() = 0;
 
 		virtual void init() = 0;
 	};
