@@ -1,6 +1,7 @@
 #pragma once
 
-#include "core/events//base_event.h"
+#include <functional>
+#include "core/events/base_event.h"
 
 namespace plb
 {
@@ -15,6 +16,10 @@ namespace plb
 		bool m_Overlay;
 		LayerID m_ID = 0;
 
+		~ILayer() = default;
+
+		void setCommandCallback(std::function<void(std::unique_ptr<ICommand>)> fn);
+
 		virtual void onAttach(LayerStack& stack) {}
 		virtual void onSuspend(LayerStack& stack) {}
 		virtual void onInclude(LayerStack& stack) {}
@@ -23,5 +28,7 @@ namespace plb
 		virtual void onUpdate(float deltaTime) {}
 		virtual void onEvent(IEvent& event) {}
 		virtual void onRender() {}
+	protected:
+		std::function<void(std::unique_ptr<IEvent>)> m_PushCommmand;
 	};
 }

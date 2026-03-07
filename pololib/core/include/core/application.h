@@ -1,9 +1,9 @@
 #pragma once
 
-#include "core/base_window.h"
-#include "core/layers/base_layer.h"
-#include "core/layers/layer_stack.h"
+#include "core/commands/command_system.h"
 #include "core/events/event_system.h"
+#include "core/layers/layer_stack.h"
+#include "core/base_window.h"
 
 namespace plb
 {
@@ -18,8 +18,7 @@ namespace plb
 		Application(AppSpecs&& specs);
 		~Application() = default;
 
-		LayerID pushLayer(std::unique_ptr<ILayer> layer);
-		LayerID pushOverlay(std::unique_ptr<ILayer> layer);
+		LayerID pushLayer(std::unique_ptr<ILayer> layer, bool overlay);
 
 		void run();
 	private:
@@ -27,7 +26,7 @@ namespace plb
 
 		LayerStack m_LayerStack;
 		EventSystem m_EventSystem;
-		//CommandSystem m_CommandSystem;
+		CommandSystem m_CommandSystem;
 		//Renderer m_Renderer;
 	};
 }

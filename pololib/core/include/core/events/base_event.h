@@ -18,7 +18,7 @@ namespace plb
 	public:
 		bool m_Handled = false;
 
- 		virtual ~IEvent() = 0;
+ 		virtual ~IEvent() = default;
 
 		virtual EventType getType() = 0;
 		virtual int getCategories() = 0;

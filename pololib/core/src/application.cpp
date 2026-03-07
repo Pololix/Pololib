@@ -4,7 +4,7 @@
 
 namespace plb
 {
-	extern std::unique_ptr<plb::IWindow> getWindow();
+	extern std::unique_ptr<plb::IWindow> getWindow(); //PLB_TODO: find a better way
 
 	Application::Application(AppSpecs&& specs)
 		: m_RootWindow(getWindow())
@@ -17,14 +17,13 @@ namespace plb
 		m_RootWindow->build(std::move(specs.winSpecs));
 	}
 
-	LayerID Application::pushLayer(std::unique_ptr<ILayer> layer)
+	LayerID Application::pushLayer(std::unique_ptr<ILayer> layer, bool overlay)
 	{
-		return m_LayerStack.attachLayer(std::move(layer), false);
-	}
-
-	LayerID Application::pushOverlay(std::unique_ptr<ILayer> layer)
-	{
-		return m_LayerStack.attachLayer(std::move(layer), true);
+		layer->setCommandCallback([this](std::unique_ptr<ICommand> cmd)
+		{
+			m_CommandSystem.push(std::move(cmd));
+		});
+		return m_LayerStack.attachLayer(std::move(layer), overlay);
 	}
 
 	void Application::run()
@@ -41,7 +40,7 @@ namespace plb
 			m_EventSystem.flush(m_LayerStack);
 
 			m_LayerStack.update(deltaTime);
-			//m_CommandSystem.commit();
+			m_CommandSystem.commit();
 
 			//m_Renderer.beginNewFrame(); //PLB_TODO: integrate imgui to the cycle
 			m_LayerStack.render();

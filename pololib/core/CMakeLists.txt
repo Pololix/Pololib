@@ -6,7 +6,7 @@ add_library(core STATIC
 	src/events/event_system.cpp
 	src/application.cpp
 	src/base_window.cpp
- "src/layers/layer_stack.cpp")
+ "src/layers/layer_stack.cpp" "include/core/commands/base_command.h" "src/commands/command_system.cpp")
 
 target_include_directories(core
 	PUBLIC
